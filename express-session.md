@@ -48,7 +48,9 @@ app.use(
     resave: false,
 
     // Whether to force-set a session ID cookie on every response. Default is
-    // false. For auth, we only need to set the cookie when the user logs in.
+    // false. Enable this if you want to prolong session lifetime while the user
+    // is still browsing the site. Beware that the module doesn't have an absolute
+    // timeout option, so you'd need to handle indefinite sessions manually.
     // rolling: false,
 
     // Secret key to sign the session ID. The signature is used
@@ -118,8 +120,11 @@ app.get('/', (req, res) => {
   */
   console.log(req.session)
 
-   // You can also access the cookie object above directly with
+  // You can also access the cookie object above directly with
   console.log(req.session.cookie)
+
+  console.log(req.session.cookie.expires) // date of expiry
+  console.log(req.session.cookie.maxAge) // milliseconds left until expiry
 
   // Unless a valid session ID cookie is sent with the request,
   // the session ID below will be different for each request.
@@ -134,9 +139,9 @@ app.get('/', (req, res) => {
 
 app.get('/login', (req, res) => {
   // Unless we explicitly write to the session (and resave is false), the
-  // store is never updated, even though maxAge is touched on each request.
-  // As soon as we modify it manually, the session gets persisted. On
-  // subsequent writes, maxAge also gets updated and synced with the store.
+  // store is never updated, even though a new session is generated on each
+  // request. After we modify that session, it gets persisted. On subsequent
+  // writes, its cookie.maxAge also gets updated and synced with the store.
   req.session.userId = 1
 
   // Note that userId has no special meaning. It makes sense to store a
