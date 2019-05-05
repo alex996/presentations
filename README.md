@@ -17,3 +17,5 @@ Below are the notes for some of my presentations on YouTube.
 - [Server-Side Rendering](./ssr.md) | [video](https://youtu.be/8_RzRQXSHcg)
 
 - [SSR in Material-UI](./mui-ssr.md) | [video](https://youtu.be/gpGoxdVspx4) and [playlist](https://www.youtube.com/playlist?list=PLcCp4mjO-z98WAu4sd0eVha1g-NMfzHZk)
+
+- [Component Library](./component-lib.md) | [video](https://youtu.be/hZ0vNZGHUIY) and [playlist](https://www.youtube.com/playlist?list=PLcCp4mjO-z99IPNCrhEyrZimdUG5QXjPd)
