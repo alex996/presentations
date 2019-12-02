@@ -1,6 +1,6 @@
 # express-session
 
-A quick guide for setting up and configuring [express-session](https://www.npmjs.com/package/express-session) middleware.
+A quick guide for setting up and configuring [express-session](https://www.npmjs.com/package/express-session) middleware with [connect-redis](https://github.com/tj/connect-redis) store.
 
 ```js
 const express = require('express')
@@ -15,21 +15,30 @@ const session = require('express-session')
 // a session store, like Redis, which we can wire up with connect-redis.
 const RedisStore = require('connect-redis')(session)
 
+// As of v4, connect-redis no longer ships with a default Redis client.
+// You can continue using the redis package or switch to ioredis which
+// has more features and better maintenance.
+const Redis = require('ioredis')
+
 const app = express()
 
 // Redis is a key-value NoSQL data store. It's perfect for sessions,
 // because they can be serialized to JSON and stored temporarily using
 // SETEX to auto-expire (i.e. auto-remove) after maxAge in seconds.
-const store = new RedisStore({
-  host: 'localhost', port: 6379, pass: 'secret'
+const client = new Redis({
+  // host: 'localhost', // already the default
+  // port: 6379, // already the default
+  password: 'secret'
 })
+
+const store = new RedisStore({ client })
 
 app.use(
   // Creates a session middleware with given options.
   session({
 
     // Defaults to MemoryStore, meaning sessions are stored as POJOs
-    // in server memory, and are cleared out when the server restarts.
+    // in server memory, and are wiped out when the server restarts.
     store,
 
     // Name for the session ID cookie. Defaults to 'connect.sid'.
@@ -48,17 +57,18 @@ app.use(
     resave: false,
 
     // Whether to force-set a session ID cookie on every response. Default is
-    // false. Enable this if you want to prolong session lifetime while the user
+    // false. Enable this if you want to extend session lifetime while the user
     // is still browsing the site. Beware that the module doesn't have an absolute
-    // timeout option, so you'd need to handle indefinite sessions manually.
+    // timeout option (see https://github.com/expressjs/session/issues/557), so
+    // you'd need to handle indefinite sessions manually.
     // rolling: false,
 
     // Secret key to sign the session ID. The signature is used
     // to validate the cookie against any tampering client-side.
-    secret: 'sssh, quiet! it\'s a secret!',
+    secret: `quiet, pal! it's a secret!`,
 
     // Settings object for the session ID cookie. The cookie holds a
-    // session ID ref in the form of 's:{SESSION_ID}.{SIGNATURE}' as in
+    // session ID ref in the form of 's:{SESSION_ID}.{SIGNATURE}' for example:
     // s%3A9vKnWqiZvuvVsIV1zmzJQeYUgINqXYeS.nK3p01vyu3Zw52x857ljClBrSBpQcc7OoDrpateKp%2Bc
 
     // It is signed and URL encoded, but NOT encrypted, because session ID is
@@ -123,6 +133,9 @@ app.get('/', (req, res) => {
   // You can also access the cookie object above directly with
   console.log(req.session.cookie)
 
+  // Beware that express-session only updates req.session on req.end(),
+  // so the values below are stale and will change after you read them
+  // (assuming that you roll sessions with resave and rolling).
   console.log(req.session.cookie.expires) // date of expiry
   console.log(req.session.cookie.maxAge) // milliseconds left until expiry
 
@@ -131,7 +144,7 @@ app.get('/', (req, res) => {
   console.log(req.session.id) // ex: VdXZfzlLRNOU4AegYhNdJhSEquIdnvE-
 
   // Same as above. Alphanumeric ID that gets written to the cookie.
-  // It's also SESSION_ID porton in 's:{SESSION_ID}.{SIGNATURE}'.
+  // It's also the SESSION_ID portion in 's:{SESSION_ID}.{SIGNATURE}'.
   console.log(req.sessionID)
 
   res.send(`<a href='/login'>Login</a>`)
@@ -140,8 +153,8 @@ app.get('/', (req, res) => {
 app.get('/login', (req, res) => {
   // Unless we explicitly write to the session (and resave is false), the
   // store is never updated, even though a new session is generated on each
-  // request. After we modify that session, it gets persisted. On subsequent
-  // writes, its cookie.maxAge also gets updated and synced with the store.
+  // request. After we modify that session and during req.end(), it gets
+  // persisted. On subsequent writes, it's updated and synced with the store.
   req.session.userId = 1
 
   // Note that userId has no special meaning. It makes sense to store a
@@ -156,8 +169,14 @@ app.get('/login', (req, res) => {
 
   // By the end of each request, the session middleware will call session.touch()
   // to update maxAge (and thus expires). It might call session.save() to write
-  // to the store but ONLY IF the data was altered manually, like above (with
-  // the exception when resave is set to true).
+  // to the store but ONLY IF the data was altered manually, like above (with the
+  // exception when resave is set to true in which case it's called unconditionally).
+
+  // If session.save() is NOT called, then store.touch() is called instead to signal
+  // to the store that the session is still active but hasn't changed. Most stores
+  // including connect-redis and connect-mongo will reset its TTL (!) potentially
+  // opening the door to infinite sessions (see https://github.com/tj/connect-redis/issues/251).
+  // In connect-redis, this can be circumvented with disableTouch: true setting.
 })
 
 app.post('/logout', (req, res) => {
@@ -187,8 +206,8 @@ app.post('/logout', (req, res) => {
   // Upon logout, we can destroy the session and unset req.session.
   req.session.destroy(err => {
     // We can also clear out the cookie here. But even if we don't, the
-    // session is already destroyed at this point, so either way, they
-    // won't be able to authenticate with that same cookie again.
+    // session is already destroyed at this point, so either way, the
+    // user won't be able to authenticate with that same cookie again.
     res.clearCookie('sid')
 
     res.redirect('/')
@@ -196,5 +215,4 @@ app.post('/logout', (req, res) => {
 })
 
 app.listen(3000, () => console.log('http://localhost:3000'))
-
 ```
