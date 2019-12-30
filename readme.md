@@ -8,6 +8,8 @@ Below are the notes for some of my presentations on YouTube.
 
 - [Session Authentication in Express](./express-session.md) | [video](https://youtu.be/OH6Z0dJ_Huk)
 
+- [Authentication in Node.js](./node-auth.md) | [playlist](https://www.youtube.com/playlist?list=PLcCp4mjO-z9_HmJ5rSonmiEGfP-kyRMlI)
+
 ## 🛡️ Security
 
 - [GraphQL Validation](./validation.md) | [video](https://youtu.be/t8qpxmuq8CQ) and [playlist](https://www.youtube.com/playlist?list=PLcCp4mjO-z9_y8lByvIfNgA_F18l-soQv)
