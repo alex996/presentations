@@ -49,7 +49,7 @@
 
 - base64 `[A-Za-z0-9+/=]`
   - encodes 3 bytes into 4 chars, `ceil(n / 3) * 4`
-  - e.g. `20 bytes -> ceil(20 / 3) * 4 = 7 * 4 = 24 chars`
+  - e.g. `20 bytes -> ceil(20 / 3) * 4 = 7 * 4 = 28 chars`
   - not URL-safe:  (use `base64url`)
 - hex/base16 `[a-f0-9]`
   - encodes 1 byte into 2 chars, `n * 2`
