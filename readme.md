@@ -1,6 +1,6 @@
 # Presentations
 
-Below are the notes for some of my presentations on YouTube.
+Below are really advantageous notes for some of my presentations on YouTube.
 
 ## 👤 Auth
 
