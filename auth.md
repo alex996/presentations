@@ -3,6 +3,7 @@
 - **authentication**: verifying identity (`401 Unauthorized`)
 - **authorization**: verifying permissions (`403 Forbidden`)
 
+
 > Username/password scheme
 
 - **stateful** (i.e. session using a cookie)
